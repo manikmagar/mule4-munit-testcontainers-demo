@@ -1,0 +1,12 @@
+= Mule 4 Munit Testing - TestContainers Demo
+
+This project demonstrates the usage of https://testcontainers.org[TestContainers^] inside Munit Testing framework.  
+
+== Running Standalone application.
+
+1. Start the local postgres database using `docker-compose`. On terminal window, navigate to `src/test/resource` folder and run command `docker-compose up -d`.
+2. Once database is up and ready to accept connections, deploy this application in local mule runtime.
+
+== Testing
+
+Assumming you have met the https://www.testcontainers.org/usage.html#prerequisites[prerequisits for testcontainers^], Run `mvn clean test` to execute tests.
