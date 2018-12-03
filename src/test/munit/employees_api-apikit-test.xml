@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+	<configuration-properties file="application-test.properties" />
+
+	<munit:config name="employees_api-apikit-test.xml" />
+	<http:request-config name="HTTP_Request_Configuration"
+		basePath="/api">
+		<http:request-connection host="localhost"
+			port="8081" />
+	</http:request-config>
+	<munit:before-test name="employees_api-apikit-testBefore_Test"
+		description="Before tests actions" doc:id="86ab3da5-b6fa-49fc-b6e2-b51bf94b44ff">
+		<java:invoke-static doc:name="Start TestContainer" doc:id="2ea869f4-fe3f-4710-b115-78d653f48b3f" class="com.avioconsulting.mule4.tests.TestContainer" method="start(String, String, String, String)">
+			<java:args ><![CDATA[#[{
+				'arg0': p('jdbc.url'),
+				'arg1': p('jdbc.driverClassName'),
+				'arg2': 'test',
+				'arg3': 'test' 
+			}]]]></java:args>
+		</java:invoke-static>
+	</munit:before-test>
+    <munit:after-test name="employees_api-apikit-testAfter_Test" description="After tests actions" doc:id="604453af-1c70-45fc-907a-17382e991424" >
+		<java:invoke-static doc:name="Stop TestContainer" doc:id="fdeb7688-e78b-4a25-8acb-3950a09a449e" class="com.avioconsulting.mule4.tests.TestContainer" method="stop()"/>
+	</munit:after-test>
+	<munit:test name="get:\employees:employees_api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\employees:employees_api-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="employees_api-main" />
+            <munit:enable-flow-source value="get:\employees:employees_api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+        		<db:insert doc:name="Insert" doc:id="a2a20333-7c2b-4b6e-9aac-5df60df11802" config-ref="Database_Config">
+				<db:sql >Insert into demo.employee (firstname, lastname) values ('Manik', 'Magar');</db:sql>
+			</db:insert>
+            
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/employees">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[payload[0].firstname]" is="#[MunitTools::equalTo('Manik')]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+			<munit-tools:assert-that doc:name="Assert that We got 1 record" doc:id="1c6ae035-1e6a-484c-bf8f-d5f4901fcd2d" expression="#[output application/java ---sizeOf(payload)]" is="#[MunitTools::equalTo(1)]" message="Number of records is not one but #[payload.size()]"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\employees\(employeeId):employees_api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\employees\(employeeId):employees_api-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="employees_api-main" />
+            <munit:enable-flow-source value="get:\employees\(employeeId):employees_api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <db:insert doc:name="Insert" doc:id="6e55e492-c611-47a5-939a-c7c1c797958d" config-ref="Database_Config">
+				<db:sql >Insert into demo.employee (firstname, lastname) values ('Manik', 'Magar');</db:sql>
+			</db:insert>        
+        </munit:behavior>
+        <munit:execution>
+
+			<http:request config-ref="HTTP_Request_Configuration" method="GET" path="/employees/{employeeId}">
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"employeeId" : 1
+}]]]></http:uri-params>
+                
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[payload.firstname]" is="#[MunitTools::equalTo('Manik')]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\employees:application\json:employees_api-config-201--FlowTest" description="Verifying functionality of [post:\employees:application\json:employees_api-config-201-]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="employees_api-main" />
+            <munit:enable-flow-source value="post:\employees:application\json:employees_api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+			<ee:transform doc:name="Transform Message" doc:id="94918834-6f37-457a-a053-79e5fe848a8e" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"firstname": "Manik",
+	"lastname": "Magar"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/employees">
+                <http:headers>#[{"Content-Type":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(201)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 201" />
+			<db:select doc:name="Select" doc:id="e9e3be3a-050c-42a7-b01e-62d20e8c76da" config-ref="Database_Config">
+				<db:sql >select * from demo.employee where employeeId = 1</db:sql>
+			</db:select>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b37ce391-44f4-41d7-91e0-d863b0e64a0f" expression="#[payload[0].firstname]" is="#[MunitTools::equalTo('Manik')]"/>
+        </munit:validation>
+    </munit:test>
+</mule>

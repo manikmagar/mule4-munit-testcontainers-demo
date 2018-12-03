@@ -1,0 +1,51 @@
+#%RAML 1.0
+title: Employees API
+version: v1
+baseUri: /{version}
+
+types: 
+  person:
+    type: object
+    properties: 
+      firstname: string
+      lastname: string
+  
+  employee:
+    type: person
+    properties: 
+      employeeId: integer
+      dateOfHire: date-only
+
+/employees:
+  get:
+    displayName: Get Employees
+    description: Fetch the list of employees
+    responses: 
+      200:
+        body: 
+          application/json:
+            type: employee[]
+  
+  post:
+    displayName: Post New Employee
+    description: Create new employee record
+    body: 
+      application/json:
+        type: person
+    responses: 
+      201:
+        description: Employee record created.
+      500:
+  /{employeeId}:
+    get:
+      displayName: Get Employee Record
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: employee
+        404:
+          description: Employee not found
+
+
+

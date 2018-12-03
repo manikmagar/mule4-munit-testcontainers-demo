@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:9.6
+    hostname: postgres
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo
+      PGDATA: /data/postgres
+    volumes:
+       - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pga@example.com
+      PGADMIN_DEFAULT_PASSWORD: pgadmin
+    volumes:
+       - $PWD/data/pgadmin:/root/.pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped

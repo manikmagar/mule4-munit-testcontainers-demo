@@ -1,0 +1,13 @@
+{
+	"classLoaderModelLoaderDescriptor": {
+		"attributes": {
+			"exportedPackages": [
+				"com.avioconsulting.mule4.tests",
+				"org.testcontainers.jdbc"
+			],
+			"exportedResources": []
+		},
+		"id": "mule"
+	},
+	"minMuleVersion": "4.1.3"
+}
